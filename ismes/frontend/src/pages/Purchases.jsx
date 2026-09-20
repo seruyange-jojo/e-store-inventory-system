@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "../api/client";
 import { formatCurrency } from "../lib/format";
+import RecordDetailPanel from "../components/RecordDetailPanel";
 
 const emptyLine = { productId: "", quantity: "1", unitCost: "" };
 const emptyForm = { supplierId: "", purchaseDate: new Date().toISOString().slice(0, 10), referenceNumber: "", notes: "" };
@@ -16,6 +17,16 @@ export default function Purchases() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
+
+  async function openPurchase(purchase) {
+    setSelectedPurchase(purchase); setDetailLoading(true); setDetailError(null);
+    try { setSelectedPurchase((await apiClient.get(`/purchases/${purchase.id}`)).data); }
+    catch { setDetailError("Could not load purchase details."); }
+    finally { setDetailLoading(false); }
+  }
 
   const loadPurchases = useCallback(async () => {
     setLoading(true);
@@ -76,6 +87,7 @@ export default function Purchases() {
       <div><p className="label-eyebrow">Stock in</p><h1 className="font-display text-2xl font-semibold text-ink-900 mt-2">Purchases</h1><p className="text-sm text-ink-500 mt-1">Receive stock from suppliers and keep buying costs current.</p></div>
       {error && <div className="bg-signal-red-bg border border-signal-red/30 text-signal-red text-sm rounded-sm px-4 py-3">{error}</div>}
       {notice && <div className="bg-signal-green-bg border border-signal-green/30 text-signal-green text-sm rounded-sm px-4 py-3">{notice}</div>}
+      {selectedPurchase && <RecordDetailPanel title={selectedPurchase.referenceNumber || `Purchase #${selectedPurchase.id}`} loading={detailLoading} error={detailError} onClose={() => setSelectedPurchase(null)}><dl className="detail-grid"><div><dt>Supplier</dt><dd>{selectedPurchase.supplierName}</dd></div><div><dt>Date</dt><dd>{selectedPurchase.purchaseDate}</dd></div><div><dt>Total</dt><dd>{formatCurrency(selectedPurchase.totalAmount)}</dd></div></dl><div><p className="label-eyebrow mb-2">Items received</p>{selectedPurchase.items?.map((item) => <div className="flex justify-between border-t border-ink-200 py-2 text-sm" key={item.productId}><span>{item.productName} × {item.quantity}</span><strong>{formatCurrency(item.subtotal)}</strong></div>)}</div></RecordDetailPanel>}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         <form className="ledger-card p-6 space-y-5" onSubmit={completePurchase}>
           <div className="flex justify-between items-center"><h2 className="font-display text-lg font-semibold">New purchase</h2><span className="label-eyebrow">{cart.length} lines</span></div>
@@ -86,7 +98,7 @@ export default function Purchases() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3"><input className="field-input" placeholder="Invoice or reference number" value={form.referenceNumber} onChange={(event) => setForm({ ...form, referenceNumber: event.target.value })} /><input className="field-input" placeholder="Notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></div>
           <div className="flex items-center justify-between"><strong className="text-lg">Total {formatCurrency(total)}</strong><button className="button-primary" disabled={saving || cart.length === 0}>{saving ? "Processing..." : "Record purchase"}</button></div>
         </form>
-        <div className="ledger-card overflow-hidden"><div className="p-5 border-b border-ink-200"><h2 className="font-display text-lg font-semibold">Recent purchases</h2></div><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Date</th><th>Supplier</th><th>Reference</th><th>Total</th></tr></thead><tbody>{!loading && purchases.length === 0 && <tr><td colSpan="4" className="empty-cell">No purchases recorded.</td></tr>}{purchases.map((purchase) => <tr key={purchase.id}><td>{purchase.purchaseDate}</td><td>{purchase.supplierName}</td><td>{purchase.referenceNumber || "—"}</td><td>{formatCurrency(purchase.totalAmount)}</td></tr>)}</tbody></table></div></div>
+        <div className="ledger-card overflow-hidden"><div className="p-5 border-b border-ink-200"><h2 className="font-display text-lg font-semibold">Recent purchases</h2></div><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Date</th><th>Supplier</th><th>Reference</th><th>Total</th></tr></thead><tbody>{!loading && purchases.length === 0 && <tr><td colSpan="4" className="empty-cell">No purchases recorded.</td></tr>}{purchases.map((purchase) => <tr key={purchase.id} className="clickable-row" onClick={() => openPurchase(purchase)}><td>{purchase.purchaseDate}</td><td>{purchase.supplierName}</td><td>{purchase.referenceNumber || "—"}</td><td>{formatCurrency(purchase.totalAmount)}</td></tr>)}</tbody></table></div></div>
       </div>
     </div>
   );
