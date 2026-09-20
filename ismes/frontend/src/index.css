@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: theme("fontFamily.body");
+  }
+  body {
+    @apply bg-paper text-ink-900 antialiased;
+  }
+  ::selection {
+    @apply bg-ink-900 text-paper;
+  }
+  /* Visible keyboard focus everywhere, no exceptions */
+  :focus-visible {
+    outline: 2px solid theme("colors.ink.900");
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* The signature element: a ledger card — thin top rule, small tag corner,
+     monospace figures. Used for every stat/data surface in the app. */
+  .ledger-card {
+    @apply relative bg-paper-raised border border-ink-200 rounded-sm;
+    border-top: 2px solid theme("colors.ink.900");
+  }
+
+  .ledger-figure {
+    @apply font-mono tabular-nums;
+  }
+
+  .label-eyebrow {
+    @apply font-body text-[11px] uppercase tracking-[0.14em] text-ink-500;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
