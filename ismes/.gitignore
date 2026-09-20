@@ -1,0 +1,23 @@
+.env
+*.log
+
+# Java / Maven
+backend/target/
+backend/.mvn/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Local database backups
+backups/
+
+# OS
+.DS_Store
