@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,10 +29,18 @@ public class ExpenseController {
     private final UserRepository userRepository;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public List<ExpenseResponse> getAll() {
         return expenseRepository.findTop50ByOrderByExpenseDateDescCreatedAtDesc().stream()
                 .map(ExpenseResponse::fromEntity)
                 .toList();
+    }
+
+    @GetMapping("/{id}")
+    @Transactional(readOnly = true)
+    public ExpenseResponse getById(@PathVariable Long id) {
+        return ExpenseResponse.fromEntity(expenseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Expense not found: " + id)));
     }
 
     @GetMapping("/categories")
