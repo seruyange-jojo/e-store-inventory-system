@@ -3,12 +3,17 @@ package com.joseph.ismes.service;
 import com.joseph.ismes.dto.DashboardSummaryResponse;
 import com.joseph.ismes.dto.ProductResponse;
 import com.joseph.ismes.repository.ProductRepository;
+import com.joseph.ismes.repository.ExpenseRepository;
+import com.joseph.ismes.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Collections;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -16,25 +21,47 @@ import java.util.List;
 public class DashboardService {
 
     private final ProductRepository productRepository;
-
-    // TODO: inject SaleRepository and ExpenseRepository once those modules exist,
-    // and replace the ZERO placeholders below with real aggregation queries
-    // (e.g. SUM(total_amount) WHERE sale_date = CURRENT_DATE). The response shape
-    // is already final, so the frontend won't need to change when this is wired up.
+    private final SaleRepository saleRepository;
+    private final ExpenseRepository expenseRepository;
 
     @Transactional(readOnly = true)
     public DashboardSummaryResponse getSummary() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime startOfTomorrow = today.plusDays(1).atStartOfDay();
         List<ProductResponse> lowStock = productRepository.findLowStockProducts().stream()
                 .map(ProductResponse::fromEntity)
                 .toList();
+        BigDecimal todaySales = saleRepository.sumTotalAmountBetween(startOfDay, startOfTomorrow);
+        BigDecimal todayCostOfGoods = saleRepository.sumCostOfGoodsBetween(startOfDay, startOfTomorrow);
+        BigDecimal todayExpenses = expenseRepository.sumAmountBetween(today, today);
+        List<DashboardSummaryResponse.TransactionSummary> transactions = new ArrayList<>();
+        saleRepository.findBySaleDateBetweenOrderBySaleDateDesc(startOfDay, startOfTomorrow).stream()
+            .limit(10)
+            .forEach(sale -> transactions.add(DashboardSummaryResponse.TransactionSummary.builder()
+                .id(sale.getId())
+                .type("SALE")
+                .reference(sale.getReceiptNumber())
+                .amount(sale.getTotalAmount())
+                .timestamp(sale.getSaleDate().toString())
+                .build()));
+        expenseRepository.findByExpenseDateBetweenOrderByExpenseDateDesc(today, today).stream()
+            .limit(10)
+            .forEach(expense -> transactions.add(DashboardSummaryResponse.TransactionSummary.builder()
+                .id(expense.getId())
+                .type("EXPENSE")
+                .reference(expense.getDescription())
+                .amount(expense.getAmount())
+                .timestamp(expense.getExpenseDate().atTime(LocalTime.NOON).toString())
+                .build()));
 
         return DashboardSummaryResponse.builder()
-                .todaySales(BigDecimal.ZERO)
-                .todaySalesCount(0)
-                .todayExpenses(BigDecimal.ZERO)
-                .estimatedProfit(BigDecimal.ZERO)
+            .todaySales(todaySales)
+            .todaySalesCount((int) saleRepository.countBySaleDateBetween(startOfDay, startOfTomorrow))
+            .todayExpenses(todayExpenses)
+                .estimatedProfit(todaySales.subtract(todayCostOfGoods).subtract(todayExpenses))
                 .lowStockProducts(lowStock)
-                .recentTransactions(Collections.emptyList())
+            .recentTransactions(transactions.stream().limit(10).toList())
                 .build();
     }
 }
