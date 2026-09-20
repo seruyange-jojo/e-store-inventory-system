@@ -27,6 +27,12 @@ public class SupplierController {
                 .toList();
     }
 
+    @GetMapping("/{id}")
+    public SupplierResponse getById(@PathVariable Long id) {
+        return SupplierResponse.fromEntity(supplierRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found: " + id)));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
