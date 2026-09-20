@@ -34,6 +34,59 @@
   .label-eyebrow {
     @apply font-body text-[11px] uppercase tracking-[0.14em] text-ink-500;
   }
+
+  .button-primary {
+    @apply bg-ink-900 text-paper px-4 py-2 text-sm font-medium rounded-sm hover:bg-ink-700 disabled:opacity-50;
+  }
+
+  .button-secondary {
+    @apply border border-ink-300 text-ink-700 px-4 py-2 text-sm font-medium rounded-sm hover:bg-ink-100;
+  }
+
+  .button-secondary.active {
+    @apply bg-ink-900 text-paper border-ink-900;
+  }
+
+  .field-label {
+    @apply flex flex-col gap-1 text-xs font-medium uppercase tracking-wider text-ink-500;
+  }
+
+  .field-input {
+    @apply w-full border border-ink-300 bg-paper px-3 py-2 text-sm text-ink-900 rounded-sm normal-case tracking-normal focus:border-ink-900;
+  }
+
+  .data-table {
+    @apply w-full text-left text-sm;
+  }
+
+  .data-table th {
+    @apply bg-paper px-4 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-medium;
+  }
+
+  .data-table td {
+    @apply border-t border-ink-200 px-4 py-4 text-ink-700;
+  }
+
+  .data-table td:first-child strong,
+  .data-table td:first-child span {
+    @apply block;
+  }
+
+  .data-table td:first-child span {
+    @apply text-xs text-ink-500 mt-1;
+  }
+
+  .empty-cell {
+    @apply py-12 text-center text-ink-500;
+  }
+
+  .status-badge {
+    @apply inline-flex bg-signal-green-bg text-signal-green px-2 py-1 text-xs font-medium rounded-sm;
+  }
+
+  .status-badge.danger {
+    @apply bg-signal-red-bg text-signal-red;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
