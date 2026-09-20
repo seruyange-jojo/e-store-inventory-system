@@ -4,13 +4,14 @@ This repository contains a Java 21 Spring Boot backend and a Vite React frontend
 
 ## Current status
 
-The project has been corrected to align its Java version, schema contract, and local setup guidance with the codebase:
+The project includes working inventory, procurement, sales, expense, reporting, and authentication workflows:
 
 - Backend requires Java 21; Docker builds from Temurin 21 and Maven is configured for Java 21.
 - The database schema migration aligns the entity primary keys and related foreign keys to BIGINT, matching the JPA model.
 - The default admin bootstrap preserves an untouched legacy admin but also honors `.env` values for `ADMIN_DEFAULT_USERNAME` and `ADMIN_DEFAULT_PASSWORD`.
-- The frontend is a working login/dashboard shell, and the public Swagger endpoint is documented as `/swagger-ui/index.html`.
-- The app still has unimplemented inventory/suppliers/sales/expenses/reports routes, but those are explicitly marked as pending rather than pretending they exist.
+- The frontend provides active Inventory, Suppliers, Purchases, Sales, Expenses, and Reports pages.
+- Fresh databases receive realistic demo data through Flyway migration V4 so customer walkthroughs are populated immediately.
+- The dashboard calculates same-day sales, cost of goods, expenses, estimated profit, recent activity, and low-stock products.
 
 ## Stack
 
@@ -83,6 +84,18 @@ If you do not use SDKMAN, install JDK 21 on your machine and set `JAVA_HOME` to 
 
    ```text
    http://localhost:8080/swagger-ui/index.html
+
+### Demo walkthrough data
+
+The first clean database includes demo records for:
+
+- 4 products across phones, televisions, audio, and accessories
+- 2 suppliers
+- 2 purchases with purchase items
+- 2 sales with sale items
+- 2 expenses
+
+The demo admin credentials are `admin` / `admin123`. Change them through `.env` before using the system outside local demonstrations. Migration V4 is applied once by Flyway and does not reinsert the demo records on later restarts.
    ```
 
 ## Project layout
@@ -122,8 +135,10 @@ ismes/
 
 - Flyway owns the database schema and Hibernate validates it with `ddl-auto: validate`.
 - The migration file `backend/src/main/resources/db/migration/V3__align_identifier_types.sql` fixes the integer-to-bigint mismatch between entity IDs and the live PostgreSQL schema.
+- The migration file `backend/src/main/resources/db/migration/V4__seed_demo_data.sql` adds idempotent customer walkthrough data to a fresh database.
 - The seeded admin is created or updated by `AdminBootstrap`, and the env values are read from `app.admin.default-username` and `app.admin.default-password` in `application.yml`.
 - JWT requests that are malformed or expired are rejected by the filter before the request reaches protected endpoints.
+- Purchases increase stock and update the latest buying price; sales decrease stock and reject insufficient inventory.
 
 ## Frontend usage
 
@@ -133,16 +148,12 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` and sign in with the backend credentials. The dashboard and auth flow are working; the remaining sidebar sections are intentionally grayed out as pending features until their pages are implemented.
+Open `http://localhost:5173` and sign in with the backend credentials. The dashboard and operational pages are backed by the live API.
 
 ## Known pending areas
 
-The following features are not fully implemented yet and should not be treated as complete:
+The following features remain future enhancements:
 
-- Inventory management pages
-- Suppliers and purchase workflows
-- Sales flow and authorization rules
-- Expenses pages and reporting
 - PDF export / receipts
 - Notifications and activity logs
 
