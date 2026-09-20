@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ismes
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ismes}
+    username: ${SPRING_DATASOURCE_USERNAME:ismes_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:changeme}
+  jpa:
+    hibernate:
+      ddl-auto: validate   # schema is owned by Flyway migrations, not Hibernate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:please-change-this-secret-in-production-min-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  admin:
+    default-username: ${ADMIN_DEFAULT_USERNAME:admin}
+    default-password: ${ADMIN_DEFAULT_PASSWORD:admin123}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.joseph.ismes: INFO
