@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { formatCurrency, formatNumber } from "../lib/format";
+import RecordDetailPanel from "../components/RecordDetailPanel";
 
 const emptyForm = {
   productCode: "",
@@ -27,8 +28,22 @@ export default function Inventory() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
 
   const isAdmin = user?.role === "ADMIN";
+
+  async function openProduct(product) {
+    setSelectedProduct(product);
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const { data } = await apiClient.get(`/products/${product.id}`);
+      setSelectedProduct(data);
+    } catch { setDetailError("Could not load product details."); }
+    finally { setDetailLoading(false); }
+  }
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -103,6 +118,8 @@ export default function Inventory() {
       {error && <div className="bg-signal-red-bg border border-signal-red/30 text-signal-red text-sm rounded-sm px-4 py-3">{error}</div>}
       {notice && <div className="bg-signal-green-bg border border-signal-green/30 text-signal-green text-sm rounded-sm px-4 py-3">{notice}</div>}
 
+      {selectedProduct && <RecordDetailPanel title={selectedProduct.name} loading={detailLoading} error={detailError} onClose={() => setSelectedProduct(null)}><dl className="detail-grid"><div><dt>Product code</dt><dd>{selectedProduct.productCode}</dd></div><div><dt>Category</dt><dd>{selectedProduct.categoryName || "Uncategorised"}</dd></div><div><dt>Buying price</dt><dd>{formatCurrency(selectedProduct.buyingPrice)}</dd></div><div><dt>Selling price</dt><dd>{formatCurrency(selectedProduct.sellingPrice)}</dd></div><div><dt>Current stock</dt><dd>{formatNumber(selectedProduct.currentStock)} {selectedProduct.unit}</dd></div><div><dt>Minimum stock</dt><dd>{formatNumber(selectedProduct.minStockLevel)} {selectedProduct.unit}</dd></div></dl><p className="text-sm text-ink-600">{selectedProduct.description || "No description provided."}</p></RecordDetailPanel>}
+
       {showForm && isAdmin && (
         <form className="ledger-card p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" onSubmit={createProduct}>
           <label className="field-label">Code<input className="field-input" name="productCode" value={form.productCode} onChange={updateField} required /></label>
@@ -131,7 +148,7 @@ export default function Inventory() {
             <tbody>
               {!loading && visibleProducts.length === 0 && <tr><td colSpan="5" className="empty-cell">No products match this view.</td></tr>}
               {visibleProducts.map((product) => (
-                <tr key={product.id}>
+                <tr key={product.id} className="clickable-row" onClick={() => openProduct(product)} tabIndex="0" onKeyDown={(event) => event.key === "Enter" && openProduct(product)}>
                   <td><strong>{product.name}</strong><span>{product.productCode}</span></td>
                   <td>{product.categoryName || "Uncategorised"}</td>
                   <td>{formatCurrency(product.sellingPrice)}</td>
