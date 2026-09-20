@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import RecordDetailPanel from "../components/RecordDetailPanel";
 
 const emptyForm = { name: "", contactPerson: "", phone: "", email: "", address: "" };
 
@@ -13,6 +14,16 @@ export default function Suppliers() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
+
+  async function openSupplier(supplier) {
+    setSelectedSupplier(supplier); setDetailLoading(true); setDetailError(null);
+    try { setSelectedSupplier((await apiClient.get(`/suppliers/${supplier.id}`)).data); }
+    catch { setDetailError("Could not load supplier details."); }
+    finally { setDetailLoading(false); }
+  }
 
   const loadSuppliers = useCallback(async () => {
     setLoading(true);
@@ -53,6 +64,7 @@ export default function Suppliers() {
       </div>
       {error && <div className="bg-signal-red-bg border border-signal-red/30 text-signal-red text-sm rounded-sm px-4 py-3">{error}</div>}
       {notice && <div className="bg-signal-green-bg border border-signal-green/30 text-signal-green text-sm rounded-sm px-4 py-3">{notice}</div>}
+      {selectedSupplier && <RecordDetailPanel title={selectedSupplier.name} loading={detailLoading} error={detailError} onClose={() => setSelectedSupplier(null)}><dl className="detail-grid"><div><dt>Contact person</dt><dd>{selectedSupplier.contactPerson || "—"}</dd></div><div><dt>Phone</dt><dd>{selectedSupplier.phone || "—"}</dd></div><div><dt>Email</dt><dd>{selectedSupplier.email || "—"}</dd></div><div><dt>Address</dt><dd>{selectedSupplier.address || "—"}</dd></div></dl></RecordDetailPanel>}
       {showForm && <form className="ledger-card p-6 grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={saveSupplier}>
         <label className="field-label">Company name<input className="field-input" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
         <label className="field-label">Contact person<input className="field-input" value={form.contactPerson} onChange={(event) => setForm({ ...form, contactPerson: event.target.value })} /></label>
@@ -63,7 +75,7 @@ export default function Suppliers() {
       </form>}
       <div className="ledger-card overflow-hidden"><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Supplier</th><th>Contact</th><th>Phone</th><th>Email</th><th>Address</th></tr></thead><tbody>
         {!loading && suppliers.length === 0 && <tr><td colSpan="5" className="empty-cell">No suppliers have been added.</td></tr>}
-        {suppliers.map((supplier) => <tr key={supplier.id}><td><strong>{supplier.name}</strong></td><td>{supplier.contactPerson || "—"}</td><td>{supplier.phone || "—"}</td><td>{supplier.email || "—"}</td><td>{supplier.address || "—"}</td></tr>)}
+        {suppliers.map((supplier) => <tr key={supplier.id} className="clickable-row" onClick={() => openSupplier(supplier)}><td><strong>{supplier.name}</strong></td><td>{supplier.contactPerson || "—"}</td><td>{supplier.phone || "—"}</td><td>{supplier.email || "—"}</td><td>{supplier.address || "—"}</td></tr>)}
       </tbody></table></div></div>
     </div>
   );
