@@ -2,11 +2,11 @@ import { NavLink } from "react-router-dom";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LedgerIcon },
-  { to: "/inventory", label: "Inventory", icon: BoxIcon, pending: true },
-  { to: "/suppliers", label: "Suppliers", icon: TruckIcon, pending: true },
-  { to: "/sales", label: "Sales", icon: TagIcon, pending: true },
-  { to: "/expenses", label: "Expenses", icon: ReceiptIcon, pending: true },
-  { to: "/reports", label: "Reports", icon: ChartIcon, pending: true },
+  { to: "/inventory", label: "Inventory", icon: BoxIcon },
+  { to: "/suppliers", label: "Suppliers", icon: TruckIcon },
+  { to: "/sales", label: "Sales", icon: TagIcon },
+  { to: "/expenses", label: "Expenses", icon: ReceiptIcon },
+  { to: "/reports", label: "Reports", icon: ChartIcon },
 ];
 
 export default function Sidebar() {
