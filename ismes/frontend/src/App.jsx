@@ -10,6 +10,7 @@ import Suppliers from "./pages/Suppliers";
 import Expenses from "./pages/Expenses";
 import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
+import Purchases from "./pages/Purchases";
 
 export default function App() {
   return (
@@ -73,6 +74,16 @@ export default function App() {
               <ProtectedRoute>
                 <AppShell>
                   <Reports />
+                </AppShell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/purchases"
+            element={
+              <ProtectedRoute>
+                <AppShell>
+                  <Purchases />
                 </AppShell>
               </ProtectedRoute>
             }
