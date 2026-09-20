@@ -18,6 +18,8 @@ frontend/build/
 
 # Local database backups
 backups/
+*.dump
+*.zip
 
 # OS
 .DS_Store
